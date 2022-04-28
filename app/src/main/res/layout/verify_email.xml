@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_marginTop="80dp"
+        android:maxWidth="160dp"
+        android:minHeight="160dp"
+        app:layout_constraintBottom_toTopOf="@+id/emailVerificationLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/email_verify" />
+
+    <TextView
+        android:id="@+id/emailVerificationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        android:paddingHorizontal="30dp"
+        android:text=""
+        android:textAlignment="center"
+        android:textSize="18sp"
+
+        app:layout_constraintBottom_toTopOf="@+id/verifyMail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/animation_view" />
+
+    <Button
+        android:id="@+id/verifyMail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        android:padding="15dp"
+        android:text="Verify Mail"
+        android:textSize="18dp"
+        app:layout_constraintBottom_toTopOf="@+id/resendVerificationMail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/emailVerificationLabel" />
+
+    <Button
+        android:id="@+id/resendVerificationMail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        android:layout_marginTop="10dp"
+        android:padding="15dp"
+        android:text="Resend Email"
+        android:textSize="18dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/verifyMail" />
+
+    <TextView
+        android:id="@+id/emailVerifyLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+
+        android:clickable="true"
+        android:text="Wrong Email? Logout"
+        android:textColor="#f00"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/resendVerificationMail" />
+</androidx.constraintlayout.widget.ConstraintLayout>
