@@ -12,6 +12,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.provider.OpenableColumns;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +33,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -49,22 +52,13 @@ public class UploadFragment extends Fragment {
 
 
     private static final String TAG = "SMSD";
-
-    public UploadFragment() {
-        // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-    }
-
     FirebaseFirestore db;
-    FirebaseAuth auth ;
+    FirebaseAuth auth;
     FirebaseStorage storageFB;
     StorageReference storageRef;
     View view;
+
+    FirebaseUser currentUser;
     boolean first = true;
     AutoCompleteTextView categoryItems;
     AutoCompleteTextView branchItems;
@@ -87,14 +81,53 @@ public class UploadFragment extends Fragment {
     TextInputLayout subjectLayout;
     TextInputLayout shortDesc;
     TextInputLayout longDesc;
-
     Button submitBtn;
     String courseSelected;
     String branchSelected;
     String subjectSelected;
-ProgressDialog pd;
 
+    String courseSelectedName;
+    String branchSelectedName;
+    String subjectSelectedName;
+
+
+    ProgressDialog pd;
     Uri downloadUri;
+
+    public UploadFragment() {
+        // Required empty public constructor
+    }
+
+    static String getAlphaNumericString(int n) {
+
+        // chose a Character random from this String
+        String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                + "0123456789"
+                + "abcdefghijklmnopqrstuvxyz";
+
+        // create StringBuffer size of AlphaNumericString
+        StringBuilder sb = new StringBuilder(n);
+
+        for (int i = 0; i < n; i++) {
+
+            // generate a random number between
+            // 0 to AlphaNumericString variable length
+            int index = (int) (AlphaNumericString.length() * Math.random());
+
+            // add Character one by one in end of sb
+            sb.append(AlphaNumericString
+                    .charAt(index));
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -102,7 +135,7 @@ ProgressDialog pd;
 
         if (first) {
             auth = FirebaseAuth.getInstance();
-
+            currentUser = auth.getCurrentUser();
             db = FirebaseFirestore.getInstance();
             storageFB = FirebaseStorage.getInstance();
             storageRef = storageFB.getReference();
@@ -132,6 +165,62 @@ ProgressDialog pd;
             subjectItems.setOnItemClickListener((parent, view, position, id) -> handleOnSubjectSelection(position));
             pickFile.setOnClickListener(v -> callFilePicker());
             submitBtn.setOnClickListener(v -> onSubmitHandler());
+
+            addCourse.getEditText().addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (s.length() != 0) {
+                        courseSelectedName = s.toString();
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+            addBranch.getEditText().addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (s.length() != 0) {
+                        branchSelectedName = s.toString();
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+            addSubject.getEditText().addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (s.length() != 0) {
+                        subjectSelectedName = s.toString();
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
         }
         categoryItems.setAdapter(courseAdapter);
         subjectItems.setAdapter(subjectAdapter);
@@ -142,24 +231,26 @@ ProgressDialog pd;
     }
 
     private void onSubmitHandler() {
-        if (courseSelected == null) {
+        if (currentUser.isAnonymous()) {
+            Snackbar.make(view, "Please sign-in to upload files", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
+        } else if (courseSelectedName == null) {
             Snackbar.make(view, "Please select a course", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
-        } else if (branchSelected == null) {
+        } else if (branchSelectedName == null) {
             Snackbar.make(view, "Please select a branch", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
-        } else if (subjectSelected == null) {
+        } else if (subjectSelectedName == null) {
             Snackbar.make(view, "Please select a subject", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
-        }else if (shortDesc.getEditText().getText().length() < 5){
-            Snackbar.make( view , "Please write valid title", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
-        }else if (fileName == null ) {
-            Snackbar.make( view , "Please add a notes", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
+        } else if (shortDesc.getEditText().getText().length() < 5) {
+            Snackbar.make(view, "Please write valid title", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
+        } else if (fileName == null) {
+            Snackbar.make(view, "Please add a notes", Snackbar.LENGTH_SHORT).setAnchorView(R.id.bottomNavigation).show();
 
-        }else {
-callUploadFile();
-            pd =  new ProgressDialog(getActivity());
+        } else {
+            callUploadFile();
+            pd = new ProgressDialog(getActivity());
             pd.setTitle("Please wait...");
-pd.setMessage("Uploading file to server");
-pd.setCancelable(true);
-pd.show();
+            pd.setMessage("Uploading file to server");
+            pd.setCancelable(true);
+            pd.show();
             Log.d(TAG, fileName + fileUri);
         }
 
@@ -168,12 +259,10 @@ pd.show();
     private void callUploadFile() {
 
 
-
-     //   StorageReference fileNameFB = storageRef.child(fileName);
-     //   Uri file = Uri.fromFile(new File("path/to/images/rivers.jpg"));
-        StorageReference notesRef = storageRef.child("Notes/"+fileName);
+        //   StorageReference fileNameFB = storageRef.child(fileName);
+        //   Uri file = Uri.fromFile(new File("path/to/images/rivers.jpg"));
+        StorageReference notesRef = storageRef.child("Notes/" + getAlphaNumericString(8) + "__" + fileName);
         UploadTask uploadTask = notesRef.putFile(fileUri);
-
 
 
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
@@ -190,7 +279,7 @@ pd.show();
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
-                     downloadUri = task.getResult();
+                    downloadUri = task.getResult();
                     Log.d(TAG, downloadUri.toString());
 
 
@@ -210,15 +299,15 @@ pd.show();
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
 
-                Log.e(TAG,"Failed", exception);
+                Log.e(TAG, "Failed", exception);
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                 // ...
-                Log.d(TAG,"Success");
-Log.d(TAG, taskSnapshot.getMetadata().getPath() );
+                Log.d(TAG, "Success");
+                Log.d(TAG, taskSnapshot.getMetadata().getPath());
 
             }
         });
@@ -226,16 +315,18 @@ Log.d(TAG, taskSnapshot.getMetadata().getPath() );
 
     private void callUploadData() {
 
-        HashMap<String, String> uploadDada = new HashMap<>();
-       FirebaseUser currentUser = auth.getCurrentUser();
-        uploadDada.put("userUID" , currentUser.getUid());
+        HashMap<String, Object> uploadDada = new HashMap<>();
+        uploadDada.put("userUID", currentUser.getUid());
         uploadDada.put("uri", downloadUri.toString());
-        uploadDada.put("branch", branchSelected);
-        uploadDada.put("course", courseSelected);
-        uploadDada.put("subject", subjectSelected);
+        uploadDada.put("branch", branchSelectedName);
+        uploadDada.put("course", courseSelectedName);
+        uploadDada.put("subject", subjectSelectedName);
         uploadDada.put("title", shortDesc.getEditText().getText().toString());
-        uploadDada.put("description", longDesc.getEditText().getText().toString());
+        uploadDada.put("fileName", fileName);
         uploadDada.put("userName", currentUser.getDisplayName());
+        uploadDada.put("uploadedOn", Timestamp.now());
+        uploadDada.put("verified", true);
+
 
         db.collection("notes")
                 .add(uploadDada)
@@ -244,15 +335,15 @@ Log.d(TAG, taskSnapshot.getMetadata().getPath() );
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         pd.cancel();
+                        Toast.makeText(getContext(), "Notes uploaded Successfully", Toast.LENGTH_SHORT).show();
 
-                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                        //    Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         pd.cancel();
-
                         Log.w(TAG, "Error adding document", e);
                     }
                 });
@@ -262,12 +353,14 @@ Log.d(TAG, taskSnapshot.getMetadata().getPath() );
     private void handleOnSubjectSelection(int position) {
         CourseModel item = (CourseModel) subjectAdapter.getItem(position);
         subjectSelected = item.getId();
+        subjectSelectedName = item.getName();
 
     }
 
     private void handleOnBranchSelection(int position) {
         CourseModel item = (CourseModel) branchAdapter.getItem(position);
         branchSelected = item.getId();
+        branchSelectedName = item.getName();
 
         addBranch.setVisibility(View.GONE);
         addSubject.setVisibility(View.GONE);
@@ -286,11 +379,14 @@ Log.d(TAG, taskSnapshot.getMetadata().getPath() );
         addCourse.setVisibility(View.GONE);
         addBranch.setVisibility(View.GONE);
         addSubject.setVisibility(View.GONE);
+
+
         branchLayout.setVisibility(View.VISIBLE);
         subjectLayout.setVisibility(View.VISIBLE);
 
         CourseModel item = (CourseModel) courseAdapter.getItem(position);
         courseSelected = item.getId();
+        courseSelectedName = item.getName();
         if (item.getName().equals("None of the above")) {
             addCourse.setVisibility(View.VISIBLE);
             addBranch.setVisibility(View.VISIBLE);
@@ -321,7 +417,6 @@ Log.d(TAG, taskSnapshot.getMetadata().getPath() );
                 });
 
     }
-
 
     private void getBranches(CourseModel course) {
 

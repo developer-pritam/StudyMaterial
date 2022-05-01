@@ -181,6 +181,7 @@
                 android:layout_margin="30dp"
                 android:layout_marginTop="40dp"
                 android:hint="Description"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -189,7 +190,9 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="100dp" />
+                    android:minHeight="100dp"
+                    android:visibility="invisible"
+                    />
 
             </com.google.android.material.textfield.TextInputLayout>
 
